@@ -121,6 +121,16 @@ public class TestClient {
             e.printStackTrace();
         }
     }
+    public static void GetRoomInfo(String account){
+        try {
+            outputStream.writeUTF("GETROOMINFO");
+            inputStream.readUTF();
+            outputStream.writeUTF(account);
+            System.out.println(inputStream.readUTF());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
     public static void main(String args[]){
         try {
             socket = new Socket("127.0.0.1",9999);
@@ -128,11 +138,12 @@ public class TestClient {
             outputStream = new DataOutputStream(socket.getOutputStream());
             //REG("cute","12345","Annie");
             //LOG("abcde","12345");
-            //OpenChatRoom("測試");
-            //JoinChatRoom("測試");
-            //SendMessage("cute","I love you~~","測試");
-            GetNewMessage("bingbingwei","測試","GetMessage");
-            //UpdateChatRoom("bingbingwei","測試");
+            //OpenChatRoom("測試3");
+            //JoinChatRoom("測試3");
+            //SendMessage("dad","I love you~~","測試1");
+            //GetNewMessage("bingbingwei","測試1","GetMessage");
+            //GetRoomInfo("bingbingwei");
+            //UpdateChatRoom("bingbingwei","測試1");
             outputStream.writeUTF("LOGOUT");
         } catch (IOException e) {
             e.printStackTrace();

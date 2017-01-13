@@ -85,6 +85,12 @@ public class Worker implements Runnable {
                         String ret = GetNewMessage(account,roomname,type);
                         outputstream.writeUTF(ret);
                         break;
+                    case "GETROOMINFO":
+                        outputstream.writeUTF("ok");
+                        account = inputstream.readUTF();
+                        result = GetRoomInfo(account);
+                        outputstream.writeUTF(result);
+                        break;
                 }
             }
         } catch (IOException e) {e.printStackTrace();}
@@ -158,5 +164,15 @@ public class Worker implements Runnable {
             return Integer.toString(msgs.size());
         else
             return strmsgs;
+    }
+    public String GetRoomInfo (String account){
+        String query="SELECT * FROM cnfinal.user2room\n"+
+                "WHERE account = \""+account+"\"";
+        String strmsgs = database.SELECTLIST(query,"ROOMINFO");
+        List<roominfo> rooms = gson.fromJson(strmsgs,new TypeToken<List<roominfo>>(){}.getType());
+        for(int i=0;i<rooms.size();i++)
+            rooms.get(i).newmsg = Integer.valueOf(GetNewMessage(account,rooms.get(i).roomname,"INT"));
+        strmsgs = gson.toJson(rooms);
+        return strmsgs;
     }
 }

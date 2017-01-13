@@ -72,6 +72,22 @@ public class SQLdatabase {
                 e.printStackTrace();
             }
         }
+        else if(type.equals("ROOMINFO")){
+            try {
+                Statement st = conn.createStatement();
+                st.execute(query);
+                ResultSet rs = st.getResultSet();
+                List<roominfo> list = new ArrayList<>();
+                while(rs.next()){
+                    roominfo single = new roominfo();
+                    single.roomname = rs.getString("roomname");
+                    list.add(single);
+                }
+                ret = gson.toJson(list);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
         return ret;
     }
     public String LOGIN(String account, String password){
