@@ -1,4 +1,5 @@
 import javax.swing.*;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -8,15 +9,20 @@ public class ClientGUI {
     private JFrame frame;
     private String page;
     private String firstPageOp = "login";
-    private String account = "mom";
+    private String account = "Dianyo2";
     private String password = "12345";
+    private String nickname = "Dianyo2";
     private Boolean frameExist = true;
     private String roomName = "測試1";
     private Boolean chatExist = true;
     private String newMsg = "test";
+    private Boolean sending = true;
+    private Boolean addNewChatRoom = true;
+    private List<String> membersToNewChatRoom = new ArrayList<String>();
     public ClientGUI() {
 //        this.frame = new JFrame("CNLine");
 //        this.frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        membersToNewChatRoom.add(account);
     }
 
     public void displayFirstPage() {
@@ -53,6 +59,9 @@ public class ClientGUI {
     public String getPassword() {
         return this.password;
     }
+    public String getNickname() {
+        return this.nickname;
+    }
     public String getRoomName() {
         return this.roomName;
     }
@@ -64,5 +73,14 @@ public class ClientGUI {
     }
     public String getMsg(){
         return this.newMsg;
+    }
+    public Boolean isSending() {
+        return this.sending;
+    }
+    public Boolean waitAddNewChatRoom() {
+        return this.addNewChatRoom;
+    }
+    public List<String> getNewRoomMember() {
+        return this.membersToNewChatRoom;
     }
 }

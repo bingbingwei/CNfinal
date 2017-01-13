@@ -5,18 +5,20 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Created by dianyo on 2017/1/12.
  */
 public class ClientSocket implements Runnable {
-    private String instruction;
+    private String instruction = "";
     private Socket socket;
     private String account;
     private String password;
-    private String loginMsg;
-    private String registerMsg;
+    private String nickname;
+    private String loginMsg = "";
+    private String registerMsg = "";
     private Gson gson = new Gson();
     private DataInputStream inputStream;
     private DataOutputStream outputStream;
@@ -30,6 +32,8 @@ public class ClientSocket implements Runnable {
     private Message msgStructure = new Message();
     private String type = "123";
     private String chatMsgToServer;
+    private List<String> memberToNewChatRoom;
+    private Boolean executed;
 
     public ClientSocket() {
         try {
@@ -41,45 +45,51 @@ public class ClientSocket implements Runnable {
         }
 
     }
+
     public void sendLoginMsg(String account, String password) {
         this.instruction = "Login";
         this.account = account;
         this.password = password;
     }
-    public void sendRegisterMsg(String account, String password) {
+    public void sendRegisterMsg(String account, String password, String nickname) {
         this.account = account;
         this.password = password;
+        this.nickname = nickname;
         this.instruction = "Register";
     }
     public String getLoginMsg() {
         System.out.println(this.loginMsg);
-        String tmp = this.loginMsg;
-       return this.loginMsg;
+        return this.loginMsg;
     }
     public String getRegisterMsg() {
-        if (this.registerMsg.equals("SUCCESS")) return "OK";
-        return registerMsg;
+        System.out.println(this.registerMsg);
+        return this.registerMsg;
     }
     public Boolean isExecuting() {
         return this.executing;
     }
     public void sendMsg(String msg, String roomName) {
-        this.instruction = "Send Msg";
+        this.instruction = "SendMsg";
         this.roomName = roomName;
         this.chatMsgToServer = msg;
     }
     public void setAllChatRoom() {
-        this.instruction = "All Room";
+        this.instruction = "AllRoom";
     }
     public List getAllChatRoom() {
         return this.allRoom;
     }
     public void setHistory(String roomName) {
-        this.instruction = "All Msg";
+        this.instruction = "AllMsg";
         this.roomName = roomName;
     }
     public List getHistory(String roomName) {
         return this.allMsg;
+    }
+    public void setNewChatRoom(List<String> members, String roomName) {
+        this.instruction = "AddNew";
+        this.roomName = roomName;
+        this.memberToNewChatRoom = members;
     }
     public void close() {
         try {
@@ -109,12 +119,13 @@ public class ClientSocket implements Runnable {
     private  void register() {
         user.account = this.account;
         user.password = this.password;
+        user.nickname = this.nickname;
         msgToServer = gson.toJson(user);
         try {
             outputStream.writeUTF("REGISTER");
             inputStream.readUTF();
             outputStream.writeUTF(msgToServer);
-            this.registerMsg = inputStream.readUTF();
+            registerMsg = inputStream.readUTF();
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
@@ -172,10 +183,32 @@ public class ClientSocket implements Runnable {
             outputStream.writeUTF("GETROOMINFO");
             inputStream.readUTF();
             outputStream.writeUTF(account);
-            System.out.println(inputStream.readUTF());
+            inputStream.readUTF();
         } catch ( Exception e) {
             System.out.println(e.getMessage());
         }
+    }
+
+    private void addNewChatRoom() {
+        try {
+            System.out.println("here");
+            outputStream.writeUTF("OPENCHATROOM");
+            inputStream.readUTF();
+            outputStream.writeUTF(roomName);
+            inputStream.readUTF();
+
+            List<String> members = new ArrayList<>();
+            for (int i = 0; i < memberToNewChatRoom.size() ; i++)
+                members.add(memberToNewChatRoom.get(i));
+            String msg = gson.toJson(members);
+            outputStream.writeUTF("JOIN");
+            inputStream.readUTF();
+            outputStream.writeUTF(msg);
+            inputStream.readUTF();
+            outputStream.writeUTF(roomName);
+            inputStream.readUTF();
+        } catch (Exception e) { System.out.println(e.getMessage());}
+
     }
     @Override
     public void run() {
@@ -187,19 +220,24 @@ public class ClientSocket implements Runnable {
                     login();
                     break;
                 case "Register":
-
+                    this.executing = true;
                     register();
                     break;
-                case "Send Msg":
+                case "SendMsg":
+                    this.executing = true;
                     sendMsgToServer();
                     break;
-                case "All Room":
+                case "AllRoom":
                     this.executing = true;
                     getAllRoomFromServer();
                     break;
-                case "All Msg":
+                case "AllMsg":
                     this.executing = true;
                     getAllMsgFromServer();
+                    break;
+                case "AddNew":
+                    this.executing = true;
+                    addNewChatRoom();
                     break;
                 case "None":
                     break;
