@@ -1,5 +1,5 @@
 import javax.swing.*;
-import java.awt.*;
+import java.util.List;
 
 /**
  * Created by dianyo on 2017/1/13.
@@ -8,15 +8,15 @@ public class ClientGUI {
     private JFrame frame;
     private String page;
     private String firstPageOp = "login";
-    private String account = "bingbingwei";
+    private String account = "mom";
     private String password = "12345";
     private Boolean frameExist = true;
-    private String roomName = "test1";
+    private String roomName = "測試1";
     private Boolean chatExist = true;
     private String newMsg = "test";
     public ClientGUI() {
-        this.frame = new JFrame("CNLine");
-        this.frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+//        this.frame = new JFrame("CNLine");
+//        this.frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     }
 
     public void displayFirstPage() {
