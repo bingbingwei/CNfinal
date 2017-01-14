@@ -34,9 +34,11 @@ public class CNLine {
     private String selected_user, user_nickname;
     private static JFrame frame = new JFrame("CNLine");
     private void waitControllerExecute(ClientGUI controller) {
+        controller.setExecuting();
         while (controller.getExecuting()) {
             try {
-                Thread.sleep(30);
+                System.out.println("waiting execute");
+                Thread.sleep(100);
             } catch (Exception e) { System.out.println(e.getMessage()); }
         }
     }
@@ -59,6 +61,7 @@ public class CNLine {
                 waitControllerExecute(GUIDataController);
                 GUIDataController.setWaiting();
                 String loginMsg = GUIDataController.getLoginMsg();
+                System.out.println(loginMsg + "GUI");
                 if (!loginMsg.equals("LOGIN SUCCESS")){
                     JOptionPane.showMessageDialog(frame, loginMsg);
                 } else {
@@ -69,6 +72,17 @@ public class CNLine {
                     // String[] history =
                     // listModel.addElement("dddd");
                     //Add to listmodel
+                    GUIDataController.setAllRoom();
+                    GUIDataController.setNotWaiting();
+                    waitControllerExecute(GUIDataController);
+                    GUIDataController.setWaiting();
+                    List<roominfo> rooms;
+                    rooms = GUIDataController.getAllRoom();
+                    if (rooms != null) {
+                        for (int i = 0; i < rooms.size(); i++) {
+                            listModel.addElement(rooms.get(i).roomname);
+                        }
+                    }
                     userList.setModel(listModel);
                     CardLayout c = (CardLayout) panel1.getLayout();
                     c.last(frame.getContentPane());
@@ -78,36 +92,44 @@ public class CNLine {
         signupButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                GUIDataController.setAccount(loginaccount.getText());
-                GUIDataController.setPassword(String.valueOf(passwordField1.getPassword()));
+                GUIDataController.setAccount(signupAccount.getText());
+                GUIDataController.setPassword(String.valueOf(passwordField2.getPassword()));
                 GUIDataController.setNickname(signupNickname.getText());
                 GUIDataController.setNotWaiting();
                 waitControllerExecute(GUIDataController);
-                GUIDataController.setWaiting();
                 //Send user info to server
                 String registerMsg = GUIDataController.getLoginMsg();
                 if (!registerMsg.equals("SUCCESS")) {
                     JOptionPane.showMessageDialog(frame, registerMsg);
                 } else {
                     CardLayout c = (CardLayout) panel1.getLayout();
-                    c.first(frame.getContentPane());
+                    c.last(frame.getContentPane());
                 }
             }
         });
         userList.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
+
                 if (e.getClickCount() == 2) {
                     super.mouseClicked(e);
+                    System.out.println("click2");
+                    GUIDataController.setChatExist();
                     int index = userList.getSelectedIndex();
                     selected_user = listModel.getElementAt(index);
                     GUIDataController.setRoomName(selected_user);
                     GUIDataController.setOpenAChat();
+                    GUIDataController.setNotWaiting();
                     waitControllerExecute(GUIDataController);
-                    List<String> allMsg = GUIDataController.getAllMsg();
-                    for (int i = 0; i < allMsg.size(); i++) {
-                        messages.append(allMsg.get(i));
+                    GUIDataController.setWaiting();
+                    System.out.println("getAllMsg");
+                    List<Message> allMsg = GUIDataController.getAllMsg();
+                    if (allMsg != null) {
+                        for (int i = 0; i < allMsg.size(); i++) {
+                            messages.append(allMsg.get(i).nickname + " : " + allMsg.get(i).msg +"\n");
+                        }
                     }
+
                     CardLayout c = (CardLayout)panel1.getLayout();
                     c.previous(frame.getContentPane());
                     c.previous(frame.getContentPane());
@@ -118,6 +140,7 @@ public class CNLine {
         backButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                GUIDataController.setChatClose();
                 CardLayout c = (CardLayout)panel1.getLayout();
                 c.last(frame.getContentPane());
             }
@@ -131,23 +154,35 @@ public class CNLine {
                     JOptionPane.showMessageDialog(frame ,"Cancell.");
                 }else {
                     JOptionPane.showMessageDialog(frame, "Start the conversation with " + input + ".");
-                    listModel.addElement(input);
                     List<String> members = new ArrayList<String>();
                     members.add(input);
-                    GUIDataController.setAddNewChatRoom();
-                    GUIDataController.setRoomName(input);
                     GUIDataController.setNewRoomMember(members);
-                    GUIDataController.setNotWaiting();
-                    waitControllerExecute(GUIDataController);
-                    GUIDataController.setWaiting();
                 }
+                String input2 = JOptionPane.showInputDialog("Type your room name: ");
+                if (input2 == null) {
+                    JOptionPane.showMessageDialog(frame, "Cancell");
+                }  else {
+                    listModel.addElement(input2);
+                    JOptionPane.showMessageDialog(frame, "Name is " + input2 + ".");
+                    GUIDataController.setRoomName(input2);
+                }
+                GUIDataController.setAddNewChatRoom();
+                GUIDataController.setNotWaiting();
+                waitControllerExecute(GUIDataController);
+                GUIDataController.setWaiting();
             }
         });
         enterButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                GUIDataController.setSending();
                 String mesg = newmessage.getText();
                 System.out.print(mesg);
+                GUIDataController.setSendingMsg(mesg);
+                GUIDataController.setNotWaiting();
+                waitControllerExecute(GUIDataController);
+                GUIDataController.setWaiting();
+
                 newmessage.setText("");
                 if(mesg.endsWith("\n"))
                     messages.append(user_nickname+" : " + mesg);

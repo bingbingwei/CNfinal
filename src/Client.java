@@ -3,6 +3,7 @@
  */
 public class Client {
     private static void waitForExecute(ClientSocket clientSocket, ClientGUI clientGUI) {
+        clientSocket.setExecuting();
         clientGUI.setExecuting();
         while (clientSocket.isExecuting()) {
             try {
@@ -14,9 +15,11 @@ public class Client {
         clientGUI.setNotExecuting();
     }
     private static void waitForGUI(ClientGUI clientGUI) {
+        clientGUI.setWaiting();
         while (clientGUI.isWaiting()) {
             try {
-                Thread.sleep(30);
+                System.out.println("waiting GUI");
+                Thread.sleep(100);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -33,33 +36,42 @@ public class Client {
         String operation;
 
         String loginMsg = "";
-        while (true) {
 
+        waitForGUI(clientGUI);
+        operation = clientGUI.getFirstPageOp();
+        if (operation.equals("login")) {
+            clientSocket.sendLoginMsg(clientGUI.getAccount(), clientGUI.getPassword());
+            waitForExecute(clientSocket, clientGUI);
+            System.out.println("finish");
+            loginMsg = clientSocket.getLoginMsg();
+            System.out.println(loginMsg + "Main");
+            clientGUI.loginSuccess(loginMsg);
+            System.out.println(operation + " " + loginMsg);
+//            if (loginMsg.equals("LOGIN SUCCESS"));
+        } else {
             waitForGUI(clientGUI);
-            operation = clientGUI.getFirstPageOp();
-            if (operation.equals("login")) {
-                clientSocket.sendLoginMsg(clientGUI.getAccount(), clientGUI.getPassword());
-                waitForExecute(clientSocket, clientGUI);
-                loginMsg = clientSocket.getLoginMsg();
-                clientGUI.loginSuccess(loginMsg);
-                System.out.println(operation + " " + loginMsg);
-                if (loginMsg.equals("LOGIN SUCCESS")) break;
-            } else {
-                waitForGUI(clientGUI);
-                //clientGUI.register();
-                clientSocket.sendRegisterMsg(clientGUI.getAccount(), clientGUI.getPassword(), clientGUI.getNickname());
-                waitForExecute(clientSocket, clientGUI);
-                loginMsg = clientSocket.getRegisterMsg();
-                clientGUI.registerSuccess(loginMsg);
-                System.out.println(loginMsg);
-                if (loginMsg.equals("SUCCESS")) break;
-            }
+            System.out.println("after waiting");
+            //clientGUI.register();
+            clientSocket.sendRegisterMsg(clientGUI.getAccount(), clientGUI.getPassword(), clientGUI.getNickname());
+            waitForExecute(clientSocket, clientGUI);
+            loginMsg = clientSocket.getRegisterMsg();
+            clientGUI.registerSuccess(loginMsg);
+            clientGUI.setNotExecuting();
+            System.out.println("afterExecute");
+            System.out.println(loginMsg);
+//            if (loginMsg.equals("SUCCESS"));
         }
 
+        System.out.println("afterLogin");
+
         while (clientGUI.isExist()) {
-            clientSocket.setAllChatRoom();
-            waitForExecute(clientSocket, clientGUI);
-            clientGUI.displayAllChat(clientSocket.getAllChatRoom());
+            waitForGUI(clientGUI);
+            if(clientGUI.getNeedAllRoom()) {
+                clientSocket.setAllChatRoom();
+                waitForExecute(clientSocket, clientGUI);
+                System.out.println("after All room Main");
+                clientGUI.displayAllChat(clientSocket.getAllChatRoom());
+            }
 
             if(clientGUI.waitAddNewChatRoom()) {
                 System.out.println("in");
@@ -69,27 +81,32 @@ public class Client {
             }
             //open a chat room
             String roomName = "";
+
             if (clientGUI.getOpenAChat()) {
                 roomName = clientGUI.getRoomName();
                 clientSocket.setHistory(roomName);
                 waitForExecute(clientSocket, clientGUI);
                 clientGUI.displayChatRoom("history", clientSocket.getHistory(roomName));
+                clientGUI.setChatExist();
             }
 
             //start chat
             while (clientGUI.isChatExist()) {
-                String msg = clientGUI.getMsg();
-                if (clientGUI.isSending()) {
-                    clientSocket.sendMsg(msg, roomName);
-                    waitForExecute(clientSocket, clientGUI);
-                }
+
                 clientSocket.setHistory(roomName);
                 waitForExecute(clientSocket, clientGUI);
                 clientGUI.displayChatRoom("new", clientSocket.getHistory(roomName));
                 System.out.println("OK");
+
+                waitForGUI(clientGUI);
+                if (clientGUI.isSending()) {
+                    String msg = clientGUI.getMsg();
+                    clientSocket.sendMsg(msg, roomName);
+                    waitForExecute(clientSocket, clientGUI);
+                }
+
                 break;
             }
-            break;
         }
 
         clientSocket.close();

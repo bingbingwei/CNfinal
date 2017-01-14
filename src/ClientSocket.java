@@ -12,7 +12,7 @@ import java.util.List;
  * Created by dianyo on 2017/1/12.
  */
 public class ClientSocket implements Runnable {
-    private String instruction = "";
+    private String instruction = "None";
     private Socket socket;
     private String account;
     private String password;
@@ -33,7 +33,7 @@ public class ClientSocket implements Runnable {
     private String type = "123";
     private String chatMsgToServer;
     private List<String> memberToNewChatRoom;
-    private Boolean executed;
+    private Boolean executed = false;
 
     public ClientSocket() {
         try {
@@ -48,6 +48,7 @@ public class ClientSocket implements Runnable {
 
     public void sendLoginMsg(String account, String password) {
         this.instruction = "Login";
+        this.executed = false;
         this.account = account;
         this.password = password;
     }
@@ -56,6 +57,7 @@ public class ClientSocket implements Runnable {
         this.password = password;
         this.nickname = nickname;
         this.instruction = "Register";
+        this.executed = false;
     }
     public String getLoginMsg() {
         System.out.println(this.loginMsg);
@@ -68,8 +70,10 @@ public class ClientSocket implements Runnable {
     public Boolean isExecuting() {
         return this.executing;
     }
+    public void setExecuting() {this.executing = true;}
     public void sendMsg(String msg, String roomName) {
         this.instruction = "SendMsg";
+        this.executed = false;
         this.roomName = roomName;
         this.chatMsgToServer = msg;
     }
@@ -81,6 +85,7 @@ public class ClientSocket implements Runnable {
     }
     public void setHistory(String roomName) {
         this.instruction = "AllMsg";
+        this.executed = false;
         this.roomName = roomName;
     }
     public List getHistory(String roomName) {
@@ -88,6 +93,7 @@ public class ClientSocket implements Runnable {
     }
     public void setNewChatRoom(List<String> members, String roomName) {
         this.instruction = "AddNew";
+        this.executed = false;
         this.roomName = roomName;
         this.memberToNewChatRoom = members;
     }
@@ -162,16 +168,14 @@ public class ClientSocket implements Runnable {
             if(type.equals("GetCount"))
                 System.out.println(ret);
             else{
-                List<Message> list = gson.fromJson(ret,new TypeToken<List<Message>>(){}.getType());
-                for(int i=0;i<list.size();i++)
-                    System.out.println(list.get(i).nickname+":"+list.get(i).msg+"     "+list.get(i).timestamp);
+                this.allMsg = gson.fromJson(ret,new TypeToken<List<Message>>(){}.getType());
             }
             outputStream.writeUTF("UPDATECHATROOM");
             inputStream.readUTF();
             outputStream.writeUTF(account);
             inputStream.readUTF();
             outputStream.writeUTF(roomName);
-            System.out.println(inputStream.readUTF());
+            this.allMsg = gson.fromJson(inputStream.readUTF(), new TypeToken<List<Message>>(){}.getType());
 
         } catch (Exception e) {
             System.out.println(e.getMessage());
@@ -183,7 +187,7 @@ public class ClientSocket implements Runnable {
             outputStream.writeUTF("GETROOMINFO");
             inputStream.readUTF();
             outputStream.writeUTF(account);
-            inputStream.readUTF();
+            allRoom = gson.fromJson(inputStream.readUTF(),new TypeToken<List<roominfo>>(){}.getType());
         } catch ( Exception e) {
             System.out.println(e.getMessage());
         }
@@ -198,6 +202,8 @@ public class ClientSocket implements Runnable {
             inputStream.readUTF();
 
             List<String> members = new ArrayList<>();
+            System.out.println("here put self");
+            members.add(this.account);
             for (int i = 0; i < memberToNewChatRoom.size() ; i++)
                 members.add(memberToNewChatRoom.get(i));
             String msg = gson.toJson(members);
@@ -213,38 +219,55 @@ public class ClientSocket implements Runnable {
     @Override
     public void run() {
         while (isRunning) {
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            if (instruction!= "None")
+                System.out.println("instruction is " + instruction);
             switch (instruction) {
                 case "Login":
                     this.executing = true;
-                    System.out.println("login");
+                    System.out.println("login Socket");
                     login();
+                    this.executed = true;
                     break;
                 case "Register":
                     this.executing = true;
+                    System.out.println("register Socket");
                     register();
+                    this.executed = true;
                     break;
                 case "SendMsg":
                     this.executing = true;
                     sendMsgToServer();
+                    this.executed = true;
                     break;
                 case "AllRoom":
                     this.executing = true;
                     getAllRoomFromServer();
+                    this.executed = true;
                     break;
                 case "AllMsg":
                     this.executing = true;
+                    System.out.println("allMsg Socket");
                     getAllMsgFromServer();
+                    this.executed = true;
                     break;
                 case "AddNew":
                     this.executing = true;
+                    System.out.println("addNew socket");
                     addNewChatRoom();
+                    this.executed = true;
                     break;
                 case "None":
                     break;
             }
-            if (this.executing) {
+            if (this.executed) {
                 this.instruction = "None";
                 this.executing = false;
+                this.executed = false;
             }
         }
 

@@ -8,23 +8,24 @@ import java.util.List;
 public class ClientGUI implements Runnable{
     private JFrame frame;
     private String page;
-    private String firstPageOp = "login";
-    private String account = "Dianyo2";
-    private String password = "12345";
-    private String nickname = "Dianyo2";
+    private String firstPageOp = "";
+    private String account;
+    private String password;
+    private String nickname;
     private Boolean frameExist = true;
     private String roomName = "測試1";
-    private Boolean chatExist = true;
-    private String newMsg = "test";
+    private Boolean chatExist = false;
     private Boolean sending = true;
-    private Boolean addNewChatRoom;
+    private Boolean addNewChatRoom = false;
     private List<String> membersToNewChatRoom = new ArrayList<String>();
     private Boolean executing = false;
     private Boolean waiting = true;
     private String loginMsg = "";
     private Boolean openAChat = false;
-    private List<String> allMsg;
-    private List<String> allRoom;
+    private List<Message> allMsg = new ArrayList<>();
+    private List<roominfo> allRoom = new ArrayList<>();
+    private Boolean needAllRoom =false;
+    private String sendingMsg;
 
     @Override
     public void run() {
@@ -39,7 +40,9 @@ public class ClientGUI implements Runnable{
     public void loginSuccess(String msg) {
         this.loginMsg = msg;
     }
-    public String getLoginMsg() {return  this.loginMsg;}
+    public String getLoginMsg() {
+        System.out.println(this.loginMsg);
+        return  this.loginMsg;}
     public void registerSuccess(String msg) {
         //register Success or Failed GUI
         this.loginMsg = msg;
@@ -48,11 +51,14 @@ public class ClientGUI implements Runnable{
         //display All Room (Room List)
         this.allRoom = allRoom;
     }
-    public void displayChatRoom(String type, List msg) {
+    public void displayChatRoom(String type, List<Message> msg) {
         //display the chat Room (Msg List)
         this.allMsg = msg;
     }
-    public List<String> getAllMsg() {return  this.allMsg;}
+    public Boolean getNeedAllRoom() {return  this.needAllRoom;}
+    public List<roominfo> getAllRoom() {return  this.allRoom;}
+    public void setAllRoom() {this.needAllRoom = true;}
+    public List<Message> getAllMsg() {return  this.allMsg;}
     public String getFirstPageOp () {
         return this.firstPageOp;
     }
@@ -84,8 +90,10 @@ public class ClientGUI implements Runnable{
     public Boolean isChatExist() {
         return this.chatExist;
     }
+    public void setChatExist() {this.chatExist = true;}
+    public void setChatClose() {this.chatExist = false;}
     public String getMsg(){
-        return this.newMsg;
+        return this.sendingMsg;
     }
 
     public Boolean isSending() {
@@ -93,6 +101,7 @@ public class ClientGUI implements Runnable{
     }
     public void setSending() {this.sending = true;}
     public void setNotSending() {this.sending = false;}
+    public void setSendingMsg(String msg) {this.sendingMsg = msg;}
 
     public Boolean waitAddNewChatRoom() {
         return this.addNewChatRoom;
