@@ -98,7 +98,6 @@ public class Client {
                 clientGUI.displayChatRoom("new", clientSocket.getHistory(roomName));
                 System.out.println("OK");
 
-                waitForGUI(clientGUI);
                 if (clientGUI.isSending()) {
                     String msg = clientGUI.getMsg();
                     clientSocket.sendMsg(msg, roomName);

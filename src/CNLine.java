@@ -66,7 +66,7 @@ public class CNLine {
                     JOptionPane.showMessageDialog(frame, loginMsg);
                 } else {
                     //Get nickname for user
-                    user_nickname = "Me";
+                    user_nickname = GUIDataController.getNickname();
 
                     //Get previous messages
                     // String[] history =
@@ -141,6 +141,7 @@ public class CNLine {
             @Override
             public void actionPerformed(ActionEvent e) {
                 GUIDataController.setChatClose();
+                messages.setText("");
                 CardLayout c = (CardLayout)panel1.getLayout();
                 c.last(frame.getContentPane());
             }
@@ -184,10 +185,18 @@ public class CNLine {
                 GUIDataController.setWaiting();
 
                 newmessage.setText("");
-                if(mesg.endsWith("\n"))
-                    messages.append(user_nickname+" : " + mesg);
-                else
-                    messages.append(user_nickname+" : " + mesg + "\n");
+                messages.setText("");
+                GUIDataController.setNotWaiting();
+                waitControllerExecute(GUIDataController);
+                GUIDataController.setWaiting();
+                System.out.println("getAllMsg");
+                List<Message> allMsg = GUIDataController.getAllMsg();
+                if (allMsg != null) {
+                    for (int i = 0; i < allMsg.size(); i++) {
+                        messages.append(allMsg.get(i).nickname + " : " + allMsg.get(i).msg +"\n");
+                    }
+                }
+
             }
         });
     }
